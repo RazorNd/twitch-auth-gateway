@@ -26,7 +26,7 @@ plugins {
 }
 
 group = "ru.razornd.twitch"
-version = "0.0.1-SNAPSHOT"
+version = "1.0.0-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 configurations {
@@ -81,4 +81,24 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootBuildImage> {
+
+    val registryUrl: String? by project
+    val registryUsername: String? by project
+    val registryPassword: String? by project
+
+    val domain = registryUrl?.let { "$it/" } ?: ""
+    val userPath = registryUsername?.toLowerCase()?.let { "$it/" } ?: ""
+
+    imageName.set("$domain$userPath${project.name}:${project.version}")
+
+    docker {
+        publishRegistry {
+            url.set(registryUrl)
+            username.set(registryUsername)
+            password.set(registryPassword)
+        }
+    }
 }
