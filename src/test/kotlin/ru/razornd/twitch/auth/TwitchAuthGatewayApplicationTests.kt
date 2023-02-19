@@ -23,23 +23,52 @@ import com.github.tomakehurst.wiremock.http.RequestMethod.GET
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @AutoConfigureWireMock(port = 0)
-@SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["twitch.api.url=http://localhost:\${wiremock.server.port}"])
+@SpringBootTest(
+    webEnvironment = RANDOM_PORT,
+    properties = [
+        "twitch.api.url=http://localhost:\${wiremock.server.port}",
+        "twitch.registration.client-id=eWiinhlBzvWiCx",
+        "twitch.registration.client-secret=HGHSfIZ6EaPSDA2GWlG6Qip",
+        "twitch.registration.token-uri=http://localhost:\${wiremock.server.port}/oauth2/token"
+    ]
+)
 class TwitchAuthGatewayApplicationTests {
 
     @Autowired
     lateinit var testClient: WebTestClient
 
     @Test
-    fun `will return response from twitch API`() {
+    fun `will return response from twitch API`(@Value("\${twitch.registration.client-id}") clientId: String) {
         val body = """{"data": [{}]}"""
+
+        val token = "lyCQHINQVYqgo4SRhXkxs"
+
+        stubFor(
+            post("/oauth2/token")
+                .willReturn(
+                    okJson(
+                        """
+                            {
+                              "access_token": "$token",
+                              "expires_in": 4845032,
+                              "token_type": "bearer"
+                            }
+                        """.trimIndent()
+                    )
+                )
+        )
+
         stubFor(
             get(urlPathEqualTo("/helix/users"))
+                .withHeader("Authorization", equalTo("Bearer $token"))
+                .withHeader("Client-Id", equalTo(clientId))
                 .withQueryParam("login", equalTo("testUser"))
                 .willReturn(okJson(body))
         )

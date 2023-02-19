@@ -12,6 +12,8 @@ spring:
             - name: Path
               args:
                 - /helix/*
+          filters:
+            - name: TwitchAuthorization
 
 server:
   port: 80
