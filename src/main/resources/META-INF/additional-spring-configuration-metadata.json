@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "defaultValue": "https://api.twitch.tv/",
+      "name": "twitch.api.url",
+      "type": "java.lang.String",
+      "description": "URL to twitch API endpoint."
+    }
+  ]
+}

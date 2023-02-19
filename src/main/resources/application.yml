@@ -1,0 +1,17 @@
+twitch:
+  api:
+    url: https://api.twitch.tv/
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: twitch
+          uri: ${twitch.api.url}
+          predicates:
+            - name: Path
+              args:
+                - /helix/*
+
+server:
+  port: 80
