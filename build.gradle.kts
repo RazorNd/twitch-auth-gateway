@@ -42,6 +42,7 @@ repositories {
 extra["springCloudVersion"] = "2022.0.1"
 extra["testcontainersVersion"] = "1.17.6"
 extra["springMockk"] = "4.0.0"
+extra["logbackContrib"] = "0.1.5"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -55,6 +56,9 @@ dependencies {
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     runtimeOnly("io.micrometer:micrometer-tracing-bridge-brave")
     runtimeOnly("io.zipkin.reporter2:zipkin-reporter-brave")
+
+    runtimeOnly("ch.qos.logback.contrib:logback-json-classic:${property("logbackContrib")}")
+    runtimeOnly("ch.qos.logback.contrib:logback-jackson:${property("logbackContrib")}")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     kapt("org.springframework.boot:spring-boot-configuration-processor")
@@ -81,6 +85,10 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.withType<org.springframework.boot.gradle.tasks.aot.ProcessAot> {
+    jvmArgs("-Dspring.main.cloud-platform=kubernetes")
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootBuildImage> {
