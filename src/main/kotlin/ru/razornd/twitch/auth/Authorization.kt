@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import ru.razornd.twitch.auth.OAuth2AuthorizedClient
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -49,6 +50,8 @@ data class OAuth2AuthorizationContext(
     val clientRegistration: ClientRegistration,
     val authorizedClient: AuthorizedClient?
 )
+
+private val log = logger<OAuth2AuthorizedClientManager>()
 
 interface OAuth2AuthorizedClientRepository {
     suspend fun loadAuthorizedClient(): AuthorizedClient?
@@ -117,13 +120,19 @@ class ClientCredentialsOAuth2AuthorizedClientProvider(private val client: OAuth2
 
     suspend fun authorize(context: Context): AuthorizedClient = context.doAuthorize()
 
-    private suspend fun Context.doAuthorize() =
-        authorizedClient?.takeIf { !it.isExpired } ?: receiveNewToken(clientRegistration)
+    private suspend fun Context.doAuthorize(): OAuth2AuthorizedClient {
+        if (authorizedClient?.isExpired == true) {
+            log.info("Access token on the Authorized client has expired. A new access token will be received.")
+            return receiveNewToken(clientRegistration)
+        }
+
+        return authorizedClient ?: receiveNewToken(clientRegistration)
+    }
 
     private val AuthorizedClient.isExpired get() = Instant.now(clock).isAfter(accessToken.expiredAt.minus(clockSkew))
-
     private suspend fun receiveNewToken(clientRegistration: ClientRegistration) =
         AuthorizedClient(clientRegistration, client.receiveToken(clientRegistration))
+            .also { log.info("Received new access token: {}", it.accessToken) }
 }
 
 @Component
@@ -143,4 +152,5 @@ class OAuth2AuthorizedClientManager(
     private fun context(client: AuthorizedClient?) = Context(clientRegistration, client)
 
     private suspend fun AuthorizedClient.updateAuthorizedClient() = repository.saveAuthorizedClient(this)
+        .also { log.info("Save Authorized client: {}", this) }
 }

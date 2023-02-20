@@ -25,3 +25,13 @@ management:
     web:
       exposure:
         include: health,prometheus
+---
+spring:
+  config:
+    activate:
+      on-cloud-platform: kubernetes
+  main:
+    banner-mode: off
+
+logging:
+  config: classpath:logback-kubernetes.xml
