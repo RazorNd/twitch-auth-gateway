@@ -35,18 +35,6 @@ jobs:
         with:
           name: jar
           path: build/libs/twitch-auth-gateway-*.jar
-
-  push-image:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '19'
-          distribution: 'liberica'
-          cache: gradle
       - name: Create Image
         run: ./gradlew bootBuildImage --publishImage -PregistryUrl=${{ env.REGISTRY }} -PregistryUsername=${{ github.actor }} -PregistryPassword=${{ secrets.GITHUB_TOKEN }}
 
