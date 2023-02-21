@@ -21,6 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.http.RequestMethod.ANY
 import com.github.tomakehurst.wiremock.http.RequestMethod.GET
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -36,7 +37,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
         "twitch.api.url=http://localhost:\${wiremock.server.port}",
         "twitch.registration.client-id=eWiinhlBzvWiCx",
         "twitch.registration.client-secret=HGHSfIZ6EaPSDA2GWlG6Qip",
-        "twitch.registration.token-uri=http://localhost:\${wiremock.server.port}/oauth2/token"
+        "twitch.registration.token-uri=http://localhost:\${wiremock.server.port}/oauth2/token",
+        "wiremock.reset-mappings-after-each-test=true"
     ]
 )
 class TwitchAuthGatewayApplicationTests {
@@ -44,12 +46,10 @@ class TwitchAuthGatewayApplicationTests {
     @Autowired
     lateinit var testClient: WebTestClient
 
-    @Test
-    fun `will return response from twitch API`(@Value("\${twitch.registration.client-id}") clientId: String) {
-        val body = """{"data": [{}]}"""
+    private val token = "lyCQHINQVYqgo4SRhXkxs"
 
-        val token = "lyCQHINQVYqgo4SRhXkxs"
-
+    @BeforeEach
+    fun setUp() {
         stubFor(
             post("/oauth2/token")
                 .willReturn(
@@ -64,6 +64,11 @@ class TwitchAuthGatewayApplicationTests {
                     )
                 )
         )
+    }
+
+    @Test
+    fun `will return response from twitch API`(@Value("\${twitch.registration.client-id}") clientId: String) {
+        val body = """{"data": [{}]}"""
 
         stubFor(
             get(urlPathEqualTo("/helix/users"))
@@ -83,6 +88,26 @@ class TwitchAuthGatewayApplicationTests {
             newRequestPattern(GET, urlPathEqualTo("/helix/users"))
                 .withQueryParam("login", equalTo("testUser"))
         )
+    }
+
+    @Test
+    fun `will return response from twitch API from sub path`(@Value("\${twitch.registration.client-id}") clientId: String) {
+        val body = """{"data": [{"name": "Half-Life 2"}]}"""
+
+        stubFor(
+            get(urlPathEqualTo("/helix/games/top/first"))
+                .withHeader("Authorization", equalTo("Bearer $token"))
+                .withHeader("Client-Id", equalTo(clientId))
+                .willReturn(okJson(body))
+        )
+
+        testClient.get()
+            .uri("/helix/games/top/first")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody().json(body)
+
+        verify(newRequestPattern(GET, urlPathEqualTo("/helix/games/top/first")))
     }
 
     @Test

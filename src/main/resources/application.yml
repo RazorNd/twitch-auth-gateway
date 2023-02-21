@@ -13,7 +13,7 @@ spring:
           predicates:
             - name: Path
               args:
-                - /helix/*
+                - /helix/{*segment}
           filters:
             - name: TwitchAuthorization
 
