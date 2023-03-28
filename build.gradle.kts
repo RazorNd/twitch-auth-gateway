@@ -18,11 +18,11 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "3.0.2"
+    id("org.springframework.boot") version "3.0.5"
     id("io.spring.dependency-management") version "1.1.0"
     id("org.graalvm.buildtools.native") version "0.9.18"
-    kotlin("jvm") version "1.8.0"
-    kotlin("kapt") version "1.8.0"
+    kotlin("jvm") version "1.8.10"
+    kotlin("kapt") version "1.8.10"
 }
 
 group = "ru.razornd.twitch"
@@ -41,7 +41,7 @@ repositories {
 
 extra["springCloudVersion"] = "2022.0.1"
 extra["testcontainersVersion"] = "1.17.6"
-extra["springMockk"] = "4.0.0"
+extra["springMockk"] = "4.0.2"
 extra["logbackContrib"] = "0.1.5"
 
 dependencies {
